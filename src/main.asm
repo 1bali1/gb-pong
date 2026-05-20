@@ -6,52 +6,73 @@ SECTION "Header", ROM0[0x100]
     ds 0x150 - @, 0
 
 EntryPoint:
-    ld a, 0
+    xor a
     ld [rNR52], a
 
-WaitVBlank:
+FirstVBlank:
     ld a, [rLY]
     cp 144
-    jr c, WaitVBlank
+    jr c, FirstVBlank 
 
-    ld a, 0
+    xor a
     ld [rLCDC], a
 
     ld de, Tiles
     ld hl, 0x9000
     ld bc, Tiles.End - Tiles
 
-CopyTiles:
-    ld a, [de]
-    ld [hl+], a
-
-    inc de
-    dec bc
-
-    ld a, b
-    or c
-    jr nz, CopyTiles
+    call CopyToVRAM
 
     ld de, Tilemap
     ld hl, 0x9800
     ld bc, Tilemap.End - Tilemap
 
-CopyTilemap:
-    ld a, [de]
-    ld [hl+], a
-
-    inc de
-    dec bc
-
-    ld a, b
-    or c
-    jr nz, CopyTilemap
+    call CopyToVRAM
 
     ld a, LCDC_ON | LCDC_BG_ON
     ld [rLCDC], a
 
     ld a, 0b11100100
     ld [rBGP], a
+
+Main:
+
+.waitVBlank:
+    ld a, [rLY]
+    cp 144
+    jr c, .waitVBlank
+
+    ; scrolling
+    inc b
+    ld a, b
+    and 0b11
+    jr nz, .skipScroll
+
+    ld a, [rSCX]
+    inc a
+    ld [rSCX], a
+
+.skipScroll:
+
+.waitVBlankEnd:
+    ld a, [rLY]
+    cp 144
+    jr nc, .waitVBlankEnd
+
+    jr Main
+
+CopyToVRAM:
+    ld a, [de]
+    ld [hl+], a
+
+    inc de
+    dec bc
+
+    ld a, b
+    or c
+    jr nz, CopyToVRAM
+
+    ret
 
 Done:
     jr Done

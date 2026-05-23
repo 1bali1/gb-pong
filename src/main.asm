@@ -242,6 +242,43 @@ UpdateKeys:
 .wait:
     ret
 
+; @param b: x
+; @param c: y
+; @return hl: tile address
+GetTileByPixel
+    ; y
+    ld a, c
+    and 0b11111000 ; it should be dividable by 8
+    ld l, a
+    ld h, 0
+
+    add hl, hl
+    add hl, hl
+
+    ; divide by 8 -> x
+    ld a, b
+    srl a
+    srl a
+    srl a
+
+    ; add them together
+    ; l = y
+    ; a = x
+
+    ; low nibble
+    add a, l
+    ld l, a
+
+    ; high nibble
+    adc a, h
+    sub a, l
+    ld h, a
+
+    ld bc, 0x9800
+    add hl, bc
+    
+    ret
+
 Done:
     jr Done
 

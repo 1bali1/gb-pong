@@ -52,6 +52,8 @@ FirstVBlank:
 
     xor a
     ld [wFrameCounter], a
+    ld [wCurrentKeys], a
+    ld [wNewKeys], a
 
 Main:
     ld a, [rLY]
@@ -63,21 +65,51 @@ WaitVBlank:
     cp 144
     jp c, WaitVBlank
 
-    ld a, [wFrameCounter]
+/*     ld a, [wFrameCounter]
     inc a
     ld [wFrameCounter], a
     cp a, 5
-    jp nz, Main
+    jp nz, Main */
 
-    xor a
-    ld [wFrameCounter], a
+    call UpdateKeys
 
+CheckLeft:
+    ld a, [wCurrentKeys]
+    and a, PAD_LEFT
+
+    jp z, CheckRight
+
+MoveLeft:
     ld a, [STARTOF(OAM) + 1]
-    inc a
+    dec a
+
+    cp 8
+    jp z, Main
+
     ld [STARTOF(OAM) + 1], a
 
     jp Main
 
+CheckRight:
+    ld a, [wCurrentKeys]
+    and a, PAD_RIGHT
+
+    jp z, Main
+
+MoveRight:
+    ld a, [STARTOF(OAM) + 1]
+    inc a
+
+    cp 160
+    jp z, Main
+
+    ld [STARTOF(OAM) + 1], a
+
+    jp Main
+
+; @param de: source
+; @param hl: dest
+; @param bc: length
 CopyTo:
     ld a, [de]
     ld [hl+], a
@@ -91,6 +123,7 @@ CopyTo:
 
     ret
 
+; clean function
 ClearOAM:
     ld a, 0
     ld b, 160
@@ -103,6 +136,7 @@ ClearOAM:
 
     ret
 
+; clean function
 PaddleToOAM:
     ld hl, STARTOF(OAM)
     
@@ -120,12 +154,57 @@ PaddleToOAM:
     ld [hl+], a
 
     ret
+
+UpdateKeys:
+    ; update buttons
+    ld a, JOYP_GET_BUTTONS
+    call .pollKeys
+    ld b, a
+
+    ; update dirs
+    ld a, JOYP_GET_CTRL_PAD
+    call .pollKeys
+
+    swap a
+    xor b
+    ld b, a
+
+    ld a, JOYP_GET_NONE
+    ldh [rJOYP], a
+
+    ld a, [wCurrentKeys]
+    xor b
+    and b
+    ld [wNewKeys], a
+
+    ld a, b
+    ld [wCurrentKeys], a
+
+    ret
+
+; @param a: key matrix
+.pollKeys:
+    ldh [rJOYP], a
+    call .wait
     
+    ldh a, [rJOYP]
+    ldh a, [rJOYP]
+    ldh a, [rJOYP]
+
+    or 0xf0
+
+.wait:
+    ret
+
 Done:
     jr Done
 
 SECTION "Counter", WRAM0
 wFrameCounter: db
+
+SECTION "Inputs", WRAM0
+wCurrentKeys: db
+wNewKeys: db
 
 SECTION "Tiles", ROM0
 Tiles:

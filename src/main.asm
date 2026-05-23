@@ -97,10 +97,12 @@ WaitVBlank:
 BounceOnTop:
     ld a, [STARTOF(OAM) + 5]
     sub a, 8
+    add a, 4
     ld b, a
 
     ld a, [STARTOF(OAM) + 4]
     sub a, 16 + 1 ; offset + check above
+    add a, 4
     ld c, a
 
     call GetTileByPixel
@@ -116,10 +118,12 @@ BounceOnTop:
 BounceOnRight:
     ld a, [STARTOF(OAM) + 5]
     sub a, 8 - 1
+    add a, 4
     ld b, a
 
     ld a, [STARTOF(OAM) + 4]
     sub a, 16
+    add a, 4
     ld c, a
 
     call GetTileByPixel
@@ -135,10 +139,12 @@ BounceOnRight:
 BounceOnLeft:
     ld a, [STARTOF(OAM) + 5]
     sub a, 8 + 1
+    add a, 4
     ld b, a
 
     ld a, [STARTOF(OAM) + 4]
     sub a, 16
+    add a, 4
     ld c, a
 
     call GetTileByPixel
@@ -154,10 +160,12 @@ BounceOnLeft:
 BounceOnBottom:
     ld a, [STARTOF(OAM) + 5]
     sub a, 8
+    add a, 4
     ld b, a
 
     ld a, [STARTOF(OAM) + 4]
     sub a, 16 - 1
+    add a, 4
     ld c, a
 
     call GetTileByPixel

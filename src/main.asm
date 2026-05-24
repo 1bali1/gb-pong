@@ -1,6 +1,10 @@
 INCLUDE "include/hardware.inc"
 INCLUDE "src/graphics.asm"
 
+DEF BLANK_TILE EQU 0x00
+DEF LEFT_BRICK EQU 0x01
+DEF RIGHT_BRICK EQU 0x02
+
 SECTION "Header", ROM0[0x100]
     jp EntryPoint
 
@@ -98,7 +102,7 @@ WaitVBlank:
 BounceOnTop:
     ld a, [STARTOF(OAM) + 5]
     sub a, 8
-    add a, 4
+    ;add a, 4
     ld b, a
 
     ld a, [STARTOF(OAM) + 4]
@@ -112,6 +116,8 @@ BounceOnTop:
     call CanBounceFromWall
 
     jp nz, BounceOnRight
+
+    call CheckLeftBrick
 
     ld a, 1
     ld [wBallMomentumY], a
@@ -134,6 +140,8 @@ BounceOnRight:
 
     jp nz, BounceOnLeft
 
+    call CheckLeftBrick
+
     ld a, -1
     ld [wBallMomentumX], a
 
@@ -155,6 +163,8 @@ BounceOnLeft:
 
     jp nz, BounceOnBottom
 
+    call CheckLeftBrick
+
     ld a, 1
     ld [wBallMomentumX], a
 
@@ -175,6 +185,8 @@ BounceOnBottom:
     call CanBounceFromWall
 
     jp nz, BounceDone
+
+    call CheckLeftBrick
 
     ld a, -1
     ld [wBallMomentumY], a
@@ -241,6 +253,25 @@ MoveRight:
 
     jp Main
 
+; @param hl: address of the tile
+CheckLeftBrick:
+    ld a, [hl]
+    cp a, LEFT_BRICK
+    jp nz, CheckRightBrick
+
+    ld [hl], BLANK_TILE
+    inc hl
+    ld [hl], BLANK_TILE
+
+CheckRightBrick:
+    cp a, RIGHT_BRICK
+    ret nz
+
+    ld [hl], BLANK_TILE
+    dec hl
+    ld [hl], BLANK_TILE
+
+    ret
 
 ; @param de: source
 ; @param hl: dest
@@ -307,7 +338,7 @@ InitOAM:
     ret
 
 InitObjects:
-    ld a, 100
+    ld a, 130
     ld [STARTOF(OAM)], a
     
     ld a, 1
@@ -412,6 +443,11 @@ CanBounceFromWall:
     cp a, 0x09
     ret z
     cp a, 0x0a
+    ret z
+    cp a, LEFT_BRICK
+    ret z
+    cp a, RIGHT_BRICK
+
     ret
 
 Done:

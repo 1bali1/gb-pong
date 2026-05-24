@@ -10,7 +10,7 @@ RGBFIX = rgbfix
 ASM_FLAGS = -i $(INCDIR)/
 FIX_FLAGS = -v -p 0xFF
 
-SOURCES  := $(wildcard $(SRCDIR)/*.asm)
+SOURCES  := $(wildcard $(SRCDIR)/main.asm)
 OBJECTS  := $(patsubst $(SRCDIR)/%.asm, $(BUILDDIR)/%.o, $(SOURCES))
 
 all: $(BUILDDIR)/$(ROM_NAME).gb

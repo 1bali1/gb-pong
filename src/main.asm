@@ -14,11 +14,13 @@ EntryPoint:
     xor a
     ld [rNR52], a
 
-    
 FirstVBlank:
     ld a, [rLY]
     cp 144
     jr c, FirstVBlank
+
+    xor a
+    ld [rLCDC], a
 
     ; load tiles
     ld de, Tiles
@@ -48,7 +50,11 @@ MainMenu:
     and a, PAD_START
     jr z, MainMenu
 
-BeforeGame:
+FirstGameVBlank:
+    ld a, [rLY]
+    cp 144
+    jr c, FirstGameVBlank
+
     xor a
     ld [rLCDC], a
 
@@ -58,13 +64,6 @@ BeforeGame:
     ld de, Tilemap
     ld hl, 0x9800
     ld bc, Tilemap.End - Tilemap
-
-    call CopyTo
-
-    ; ? load tiles again
-    ld de, Tiles
-    ld hl, 0x9000
-    ld bc, Tiles.End - Tiles
 
     call CopyTo
 

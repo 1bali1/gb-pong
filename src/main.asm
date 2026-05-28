@@ -13,16 +13,12 @@ SECTION "Header", ROM0[0x100]
 EntryPoint:
     xor a
     ld [rNR52], a
+
     
 FirstVBlank:
     ld a, [rLY]
     cp 144
-    jr c, FirstVBlank 
-
-    xor a
-    ld [rLCDC], a
-
-    call ClearOAM
+    jr c, FirstVBlank
 
     ; load tiles
     ld de, Tiles
@@ -31,10 +27,44 @@ FirstVBlank:
 
     call CopyTo
 
+    ; load main menu tilemap
+    ld de, MainMenuTilemap
+    ld hl, 0x9800
+    ld bc, MainMenuTilemap.End - MainMenuTilemap
+
+    call CopyTo
+
+    ; turn on the lcdc settings
+    ld a, LCDC_ON | LCDC_BG_ON
+    ld [rLCDC], a
+
+    ld a, 0b11100100
+    ld [rBGP], a
+    ld [rOBP0], a
+
+MainMenu:
+    call UpdateKeys
+    ld a, [wCurrentKeys]
+    and a, PAD_START
+    jr z, MainMenu
+
+BeforeGame:
+    xor a
+    ld [rLCDC], a
+
+    call ClearOAM
+
     ; load tilemap
     ld de, Tilemap
     ld hl, 0x9800
     ld bc, Tilemap.End - Tilemap
+
+    call CopyTo
+
+    ; ? load tiles again
+    ld de, Tiles
+    ld hl, 0x9000
+    ld bc, Tiles.End - Tiles
 
     call CopyTo
 
@@ -57,17 +87,13 @@ FirstVBlank:
     ; initalize objects
     call InitObjects
 
-    ld a, LCDC_ON | LCDC_OBJ_ON | LCDC_BG_ON
-    ld [rLCDC], a
-
-    ld a, 0b11100100
-    ld [rBGP], a
-    ld [rOBP0], a
-
     xor a
     ld [wFrameCounter], a
     ld [wCurrentKeys], a
     ld [wNewKeys], a
+
+    ld a, LCDC_ON | LCDC_OBJ_ON | LCDC_BG_ON
+    ld [rLCDC], a
 
 Main:
     ld a, [rLY]
